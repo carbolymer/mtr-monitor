@@ -35,7 +35,7 @@ def main():
     mtr_result = json.load(sys.stdin)
     # ping destination
     destination = mtr_result['report']['mtr']['dst']
-    report_time = dt.datetime.now()
+    report_time = dt.datetime.utcnow()
     for hub in mtr_result['report']['hubs']:
         # persist the hub entry
         HubEntry(
