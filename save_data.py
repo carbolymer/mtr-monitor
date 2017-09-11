@@ -3,19 +3,22 @@ import argparse
 import json
 import sys
 import datetime as dt
+import logging
 
 from influxdb import InfluxDBClient, SeriesHelper
 
-db_name = 'mtr-monitor'
+logging.basicConfig(level=logging.INFO)
+
+db_name = 'mtr'
 user = 'root'
 password = 'root'
 
 
 class HubEntry(SeriesHelper):
     class Meta:
-        series_name = 'mtr.result.{destination}'
-        fields = ['time', 'count', 'loss', 'snt', 'last', 'avg', 'best', 'wrst', 'stdev']
-        tags = ['destination', 'host']
+        series_name = '{destination}'
+        fields = ['time', 'loss', 'snt', 'last', 'avg', 'best', 'wrst', 'stdev']
+        tags = ['destination', 'hop']
 
 
 def get_cmd_arguments():
@@ -38,11 +41,15 @@ def main():
     report_time = dt.datetime.utcnow()
     for hub in mtr_result['report']['hubs']:
         # persist the hub entry
+        # Modifying the data if needed so that is can be easily sorted in the event of more than 9 hops.
+        if len(hub['count']) < 2:
+            hop = "0" + hub['count'] + "-" + hub['host']
+        else:
+            hop = hub['count'] + "-" + hub['host']
         HubEntry(
             time=report_time,
             destination=destination,
-            host=hub['host'],
-            count=hub['count'],
+            hop=hop,
             loss=hub['Loss%'],
             snt=hub['Snt'],
             last=hub['Last'],
