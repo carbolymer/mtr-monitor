@@ -1,40 +1,78 @@
-#!/bin/sh
+#!/bin/bash
 
+# number of pings sent
 CYCLES=30
+# inverval between MTR tests in seconds
 INTERVAL=40
-MTR_HOST="8.8.8.8"
-MTR_HOST2="reddit.com"
-MTR_HOST3="facebook.com"
+MTR_HOSTS=("8.8.8.8" "reddit.com" "facebook.com")
+
+# set to no to not download & start docker image with influx
+INFLUXDB_DOCKER="yes"
+# if you need to change it, change also in influx-cli.sh
+INFLUXDB_DOCKER_CONTAINER_NAME="mtr-influxdb"
 INFLUXDB_HOST="localhost"
 INFLUXDB_PORT=51113
+# docker image parameter only
 INFLUXDB_ADMIN_PORT=51112
+# docker image version
+INFLUXDB_VERSION=1.7-alpine
+
+# set to "no" to not download & start grafana docker image
+GRAFANA_DOCKER="yes"
+GRAFANA_DOCKER_CONTAINER_NAME="mtr-grafana"
+# password for admin user
+GRAFANA_ADMIN_PASSWORD="grafana"
 GRAFANA_PORT=51111
+TIMEZONE="Europe/Warsaw"
 
 # END OF CONFIG
 
 function monitor_mtr() {
+  for MTR_HOST in "${MTR_HOSTS[@]}"; do
     ( mtr --report --json --report-cycles $CYCLES $MTR_HOST | ./save_data.py --host $INFLUXDB_HOST --port $INFLUXDB_PORT ) &
-    ( mtr --report --json --report-cycles $CYCLES $MTR_HOST2 | ./save_data.py --host $INFLUXDB_HOST --port $INFLUXDB_PORT ) &
-    ( mtr --report --json --report-cycles $CYCLES $MTR_HOST3 | ./save_data.py --host $INFLUXDB_HOST --port $INFLUXDB_PORT ) &
+  done
 }
 
-sudo docker run -d \
-    -p $INFLUXDB_ADMIN_PORT:8083 \
-    -p $INFLUXDB_PORT:8086 \
-    -v /etc/localtime:/etc/localtime:ro \
-    -v $PWD/influxdb:/var/lib/influxdb \
-    influxdb:1.0.2-alpine
+which mtr &>/dev/null
+if [ $? -eq 1 ]; then
+  echo "mtr is not available on this system - it is required for this script to work"
+  exit 1
+fi
 
-sudo docker run -d \
-    -p $GRAFANA_PORT:3000 \
-    -v /etc/localtime:/etc/localtime:ro \
-    -v $PWD/grafana:/var/lib/grafana/ \
-    -e "GF_SECURITY_ADMIN_PASSWORD=grafana" \
-    -e "TZ=Europe/Warsaw" \
-    grafana/grafana
+if [[ $INFLUXDB_DOCKER == "yes" ]] ; then
+  if [ ! "$(sudo docker ps -a | grep $INFLUXDB_DOCKER_CONTAINER_NAME)" ]; then
+    sudo docker run -d \
+      --restart=unless-stopped \
+      --name="$INFLUXDB_DOCKER_CONTAINER_NAME" \
+      -p $INFLUXDB_ADMIN_PORT:8083 \
+      -p $INFLUXDB_PORT:8086 \
+      -v /etc/localtime:/etc/localtime:ro \
+      -v $PWD/influxdb:/var/lib/influxdb \
+      influxdb:$INFLUXDB_VERSION
+  else
+    sudo docker start $INFLUXDB_DOCKER_CONTAINER_NAME
+  fi
+  echo "starting influxdb docker container"
+fi
 
+if [[ $GRAFANA_DOCKER == "yes" ]]; then
+  if [ ! "$(sudo docker ps -a | grep $GRAFANA_DOCKER_CONTAINER_NAME)" ]; then
+    sudo docker run -d \
+      --restart=unless-stopped \
+      --name="$GRAFANA_DOCKER_CONTAINER_NAME" \
+      -p $GRAFANA_PORT:3000 \
+      -v /etc/localtime:/etc/localtime:ro \
+      -v $PWD/grafana:/var/lib/grafana/ \
+      -e "GF_SECURITY_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD" \
+      -e "TZ=$TIMEZONE" \
+      grafana/grafana
+  else
+    sudo docker start $GRAFANA_DOCKER_CONTAINER_NAME
+  fi
+  echo "starting grafana docker container"
+fi
 
 while true; do
-    monitor_mtr
-    sleep $INTERVAL
+  monitor_mtr
+  sleep $INTERVAL
 done
