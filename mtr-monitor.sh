@@ -62,6 +62,7 @@ if [[ $GRAFANA_DOCKER == "yes" ]]; then
       --name="$GRAFANA_DOCKER_CONTAINER_NAME" \
       -p $GRAFANA_PORT:3000 \
       -v /etc/localtime:/etc/localtime:ro \
+      -v $PWD/grafana.ini:/etc/grafana/grafana.ini:ro \
       -v $PWD/grafana:/var/lib/grafana/ \
       -e "GF_SECURITY_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD" \
       -e "TZ=$TIMEZONE" \

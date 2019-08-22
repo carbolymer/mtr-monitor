@@ -1,4 +1,5 @@
 .idea/
 grafana/
+!grafana/*.json
 influxdb/
 

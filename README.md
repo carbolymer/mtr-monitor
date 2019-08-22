@@ -8,7 +8,7 @@ Simple MTR runner which stores data to InfluxDB and allows to preview stored dat
 ### Requrements
   * `bash` shell
   * `python3`
-  * `docker`
+  * `docker` (optional - required for standalone grafana and influxdb)
   * `mtr`
   * `influxdb` python package
 
