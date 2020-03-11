@@ -27,9 +27,11 @@ TIMEZONE="Europe/Warsaw"
 
 # END OF CONFIG
 
+WORKDIR=`dirname $0`
+
 function monitor_mtr() {
   for MTR_HOST in "${MTR_HOSTS[@]}"; do
-    ( mtr --report --json --report-cycles $CYCLES $MTR_HOST | ./save_data.py --host $INFLUXDB_HOST --port $INFLUXDB_PORT ) &
+    ( mtr --report --json --report-cycles $CYCLES $MTR_HOST | $WORKDIR/save_data.py --host $INFLUXDB_HOST --port $INFLUXDB_PORT ) &
   done
 }
 
@@ -47,7 +49,7 @@ if [[ $INFLUXDB_DOCKER == "yes" ]] ; then
       -p $INFLUXDB_ADMIN_PORT:8083 \
       -p $INFLUXDB_PORT:8086 \
       -v /etc/localtime:/etc/localtime:ro \
-      -v $PWD/influxdb:/var/lib/influxdb \
+      -v $WORKDIR/influxdb:/var/lib/influxdb \
       influxdb:$INFLUXDB_VERSION
   else
     sudo docker start $INFLUXDB_DOCKER_CONTAINER_NAME
@@ -62,8 +64,8 @@ if [[ $GRAFANA_DOCKER == "yes" ]]; then
       --name="$GRAFANA_DOCKER_CONTAINER_NAME" \
       -p $GRAFANA_PORT:3000 \
       -v /etc/localtime:/etc/localtime:ro \
-      -v $PWD/grafana.ini:/etc/grafana/grafana.ini:ro \
-      -v $PWD/grafana:/var/lib/grafana/ \
+      -v $WORKDIR/grafana.ini:/etc/grafana/grafana.ini:ro \
+      -v $WORKDIR/grafana:/var/lib/grafana/ \
       -e "GF_SECURITY_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD" \
       -e "TZ=$TIMEZONE" \
       grafana/grafana
@@ -72,6 +74,9 @@ if [[ $GRAFANA_DOCKER == "yes" ]]; then
   fi
   echo "starting grafana docker container"
 fi
+
+# wait for influx to initialize
+sleep 5
 
 while true; do
   monitor_mtr

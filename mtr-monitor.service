@@ -1,0 +1,12 @@
+[Unit]
+Description=MTR Monitor
+After=network.target
+
+[Service]
+ExecStart=/opt/mtr-monitor/mtr-monitor.sh
+WorkingDirectory=/opt/mtr-monitor
+SyslogIdentifier=mtr-monitor
+
+[Install]
+WantedBy=multi-user.target
+

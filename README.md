@@ -14,7 +14,8 @@ Simple MTR runner which stores data to InfluxDB and allows to preview stored dat
 
 ## How to run
 1. Edit `mtr-monitor.sh` to adjust settings to your own liking
-1. `./mtr-monitor.sh`
+1. Run `sudo make install` to install mtr-monitor to `/opt/mtr-monitor`
+1. Start the systemd service `systemctl start mtr-monitor`
 1. Open http://127.0.0.1:5111 to access Grafana UI
 
 ## How to access InfluxDB
