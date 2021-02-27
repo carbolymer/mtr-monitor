@@ -27,7 +27,7 @@ TIMEZONE="Europe/Warsaw"
 
 # END OF CONFIG
 
-WORKDIR=`dirname $0`
+WORKDIR="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 function monitor_mtr() {
   for MTR_HOST in "${MTR_HOSTS[@]}"; do
@@ -78,7 +78,7 @@ fi
 # wait for influx to initialize
 sleep 5
 
-source venv/bin/activate
+source "${WORKDIR}/venv/bin/activate"
 while true; do
   monitor_mtr
   sleep $INTERVAL
