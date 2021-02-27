@@ -11,7 +11,7 @@ INFLUXDB_DOCKER="yes"
 # if you need to change it, change also in influx-cli.sh
 INFLUXDB_DOCKER_CONTAINER_NAME="mtr-influxdb"
 INFLUXDB_HOST="localhost"
-INFLUXDB_PORT=51113
+INFLUXDB_PORT=8086
 # docker image parameter only
 INFLUXDB_ADMIN_PORT=51112
 # docker image version
@@ -31,7 +31,7 @@ WORKDIR=`dirname $0`
 
 function monitor_mtr() {
   for MTR_HOST in "${MTR_HOSTS[@]}"; do
-    ( mtr --report --json --report-cycles $CYCLES $MTR_HOST | $WORKDIR/save_data.py --host $INFLUXDB_HOST --port $INFLUXDB_PORT ) &
+    ( mtr --report --json --report-cycles $CYCLES $MTR_HOST | $WORKDIR/save_data.py --url "http://$INFLUXDB_HOST:$INFLUXDB_PORT" ) &
   done
 }
 
@@ -78,6 +78,7 @@ fi
 # wait for influx to initialize
 sleep 5
 
+source venv/bin/activate
 while true; do
   monitor_mtr
   sleep $INTERVAL

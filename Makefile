@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 install:
 	install -m 755 -d /opt/mtr-monitor
 	cp -r grafana /opt/mtr-monitor/
@@ -11,4 +13,7 @@ install:
 	install -D -m 644 requirements.txt /opt/mtr-monitor/requirements.txt
 	install -D -m 744 save_data.py /opt/mtr-monitor/save_data.py
 	install -D -m 744 mtr-monitor.service /usr/lib/systemd/system/mtr-monitor.service
+	python3 -m venv /opt/mtr-monitor/venv
+	source /opt/mtr-monitor/venv/bin/activate
+	pip3 install -r /opt/mtr-monitor/requirements.txt
 	
