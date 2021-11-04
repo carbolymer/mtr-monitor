@@ -10,7 +10,7 @@ Simple MTR runner which stores data to InfluxDB and allows to preview stored dat
   * `python3`
   * `docker` (optional - required for standalone grafana and influxdb)
   * `mtr`
-  * `influxdb` python package
+  * `influxdb` python package - using the command `pip3 install --upgrade influxdb`
 
 ## How to run
 1. Edit `mtr-monitor.sh` to adjust settings to your own liking
@@ -28,3 +28,5 @@ During consecutive runs it just starts already existing docker containers.
 The created containers will be always started when the docker service starts.
 If you want to change parameters of the container, e.g. ports, you need to remove them (e.g. `docker container rm mtr-influxdb`) and just start `mtr-monitor.sh`.
 
+Make sure influxdb is seen in ther python site-packages:
+`python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" | xargs ls`
