@@ -40,6 +40,7 @@ def main():
     destination = mtr_result['report']['mtr']['dst']
     report_time = dt.datetime.utcnow()
     for hub in mtr_result['report']['hubs']:
+        hub['count'] = str(hub['count'])
         # persist the hub entry
         # Modifying the data if needed so that is can be easily sorted in the event of more than 9 hops.
         if len(hub['count']) < 2:
